@@ -319,6 +319,11 @@ Index BinaryWriter::GetSymbolIndex(RelocType reloc_type, Index index) {
     default:
       WABT_UNREACHABLE;
   }
+  
+  if (strcmp(name.c_str(), "$_start") == 0) {
+    name = "_start";
+  } 
+  
   auto iter = symtab_.find(name);
   if (iter != symtab_.end()) {
     return iter->second;
@@ -775,7 +780,13 @@ void BinaryWriter::WriteLinkingSection() {
       WriteU32Leb128(stream_, sym.element_index, "element index");
       if (is_defined) {
         if (sym.type == SymbolType::Function) {
-          WriteStr(stream_, module_->funcs[sym.element_index]->name,
+          std::string name = module_->funcs[sym.element_index]->name;
+
+          if (strcmp(name.c_str(), "$_start") == 0) {
+            name = "_start";
+          } 
+
+          WriteStr(stream_, name,
                    "function name", PrintChars::Yes);
         } else if (sym.type == SymbolType::Global) {
           WriteStr(stream_, module_->globals[sym.element_index]->name,
